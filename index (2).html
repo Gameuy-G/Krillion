@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dive</title>
+<style>
+  body { margin: 0; padding: 16px; background: #06223d; color: #d8f6ff; font-family: monospace; }
+  .box { max-width: 460px; margin: 0 auto; border: 2px solid #20d0e8; padding: 14px; background: #0a2f52; }
+  h1 { margin: 0 0 4px; font-size: 22px; letter-spacing: 3px; }
+  small { color: #8fbfd0; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; margin: 10px 0 6px; font: 16px monospace; background: #021527; color: #fff; border: 2px solid #20d0e8; }
+  button { width: 100%; padding: 12px; font: bold 16px monospace; background: #ff3d8b; color: #fff; border: 0; }
+  #msg { min-height: 48px; margin-top: 10px; color: #ffb35c; }
+  #res { margin-top: 6px; font-size: 18px; color: #7dffb0; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>DIVE</h1>
+  <small>v<span id="ver"></span> - batch 1 placeholder: Pages works. Engine check below.</small>
+  <p id="q"></p>
+  <input id="a" type="text" autocomplete="off" autocapitalize="none" placeholder="type one answer">
+  <button id="go">DIVE</button>
+  <div id="msg"></div>
+  <div id="res"></div>
+  <button id="next" style="margin-top:12px;background:#20d0e8;color:#021527">NEXT PROMPT</button>
+</div>
+<script src="version.js"></script>
+<script src="prompts.js"></script>
+<script src="game.js"></script>
+<script>
+  var cur = null, pending = "", $ = function (id) { return document.getElementById(id); };
+  function nextPrompt() {
+    cur = DiveGame.pickRound(PROMPTS, 1)[0]; pending = "";
+    $("q").textContent = cur.text; $("a").value = ""; $("msg").textContent = ""; $("res").textContent = "";
+  }
+  function submit() {
+    var raw = $("a").value, same = pending && DiveGame.normalize(raw) === pending;
+    var r = DiveGame.evaluate(cur, raw, !!same);
+    if (r.status === "confirm") { pending = DiveGame.normalize(raw); $("msg").textContent = r.message + "  " + r.hint; $("res").textContent = ""; }
+    else if (r.status === "scored") { pending = ""; $("msg").textContent = ""; $("res").textContent = r.label + ' "' + r.canonical + '" +' + r.points + " PTS - sink " + r.meters + "m"; }
+    else { pending = ""; $("msg").textContent = r.message; $("res").textContent = ""; }
+  }
+  $("ver").textContent = VERSION;
+  $("go").onclick = submit; $("next").onclick = nextPrompt;
+  $("a").onkeydown = function (e) { if (e.key === "Enter") submit(); };
+  nextPrompt();
+</script>
+</body>
+</html>
